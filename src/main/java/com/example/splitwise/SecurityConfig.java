@@ -1,10 +1,10 @@
 package com.example.splitwise;
-import org.springframework.http.HttpMethod;
 
-import com.example.splitwise.service.JwtService;
-import com.example.splitwise.service.MyUserDetailsService;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -12,11 +12,14 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.*;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.*;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
+import com.example.splitwise.service.JwtService;
+import com.example.splitwise.service.MyUserDetailsService;
 
 @Configuration
 public class SecurityConfig {
@@ -26,8 +29,8 @@ public class SecurityConfig {
     private final String frontendOrigin;
 
     public SecurityConfig(JwtService jwtService,
-                          MyUserDetailsService userDetailsService,
-                          @Value("${app.frontend.url:https://spliteaseapp.atul.codes}") String frontendOrigin) {
+            MyUserDetailsService userDetailsService,
+            @Value("${app.frontend.url:https://spliteaseapp.atul.codes}") String frontendOrigin) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
         this.frontendOrigin = frontendOrigin;
@@ -44,13 +47,15 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 // Authorize requests using lambda style
                 .authorizeHttpRequests(auth -> auth
-                        // public endpoints
-                        .requestMatchers("/api/auth/**", "/api/users/ping", "/h2-console/**", "/actuator/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-                        // allow preflight requests
-                        .requestMatchers(HttpMethod.OPTIONS).permitAll()
-                        // everything else requires authentication
-                        .anyRequest().authenticated()
+                // public endpoints
+                .requestMatchers("/api/auth/**", "/api/users/ping", "/h2-console/**", "/actuator/**").permitAll()
+                // Swagger UI and OpenAPI docs
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                // allow preflight requests
+                .requestMatchers(HttpMethod.OPTIONS).permitAll()
+                // everything else requires authentication
+                .anyRequest().authenticated()
                 )
                 // stateless session (no HTTP session)
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
@@ -75,16 +80,22 @@ public class SecurityConfig {
     }
 
     /**
-     * CORS configuration to allow frontend to call API and send Authorization header.
-     * Adjust allowedOrigins / allowedMethods as needed.
+     * CORS configuration to allow frontend to call API and send Authorization
+     * header. Adjust allowedOrigins / allowedMethods as needed.
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration conf = new CorsConfiguration();
-        conf.setAllowedOrigins(List.of(frontendOrigin));        // allow your frontend origin
-        conf.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
-        conf.setAllowedHeaders(List.of("Authorization","Content-Type","Accept","X-Requested-With"));
-        conf.setExposedHeaders(List.of("Authorization","Content-Type")); // headers that frontend can read
+        // Allow both production frontend and localhost for development/testing
+        conf.setAllowedOrigins(List.of(
+                frontendOrigin,
+                "http://localhost:3000",
+                "http://localhost:8080",
+                "http://localhost:5173"
+        ));
+        conf.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        conf.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "X-Requested-With"));
+        conf.setExposedHeaders(List.of("Authorization", "Content-Type")); // headers that frontend can read
         conf.setAllowCredentials(true); // set to true if frontend needs cookies (not used for JWT)
         conf.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource src = new UrlBasedCorsConfigurationSource();

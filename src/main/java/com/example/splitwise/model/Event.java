@@ -1,23 +1,35 @@
 package com.example.splitwise.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.math.BigDecimal;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "events")
 public class Event {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String title;
     private LocalDateTime createdAt = LocalDateTime.now();
-
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id")
@@ -35,27 +47,66 @@ public class Event {
     private List<Debitor> splits = new ArrayList<>();
 
     // helpers
-    public void addSplit(Debitor d){
+    public void addSplit(Debitor d) {
         splits.add(d);
         d.setEvent(this);
     }
-    public void removeSplit(Debitor d){
+
+    public void removeSplit(Debitor d) {
         splits.remove(d);
         d.setEvent(null);
     }
 
     // getters / setters
-    public Long getId(){ return id; }
-    public void setId(Long id){ this.id = id; }
-    public String getTitle(){ return title; }
-    public void setTitle(String title){ this.title = title; }
-    public LocalDateTime getCreatedAt(){ return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt){ this.createdAt = createdAt; }
-    public User getCreator(){ return creator; }
-    public void setCreator(User creator){ this.creator = creator; }
-    public BigDecimal getTotal(){ return total; }
-    public void setTotal(BigDecimal total){ this.total = total; }
-    public List<Debitor> getSplits(){ return splits; }
-    public boolean isCancelled(){ return cancelled; }
-    public void setCancelled(boolean cancelled){ this.cancelled = cancelled; }
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public User getCreator() {
+        return creator;
+    }
+
+    public void setCreator(User creator) {
+        this.creator = creator;
+    }
+
+    public BigDecimal getTotal() {
+        return total;
+    }
+
+    public void setTotal(BigDecimal total) {
+        this.total = total;
+    }
+
+    public List<Debitor> getSplits() {
+        return splits;
+    }
+
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
+    }
 }

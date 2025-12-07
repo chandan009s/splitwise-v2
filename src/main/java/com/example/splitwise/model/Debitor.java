@@ -1,13 +1,25 @@
 package com.example.splitwise.model;
 
-import jakarta.persistence.*;
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 @Entity
 @Table(name = "debitors")
 public class Debitor {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -38,25 +50,72 @@ public class Debitor {
     @Version
     private Long version; // optimistic locking
 
-    public BigDecimal getRemaining(){
+    public BigDecimal getRemaining() {
         return debAmount.subtract(amountPaid);
     }
 
     // getters / setters
-    public Long getId(){ return id; }
-    public void setId(Long id){ this.id = id; }
-    public User getUser(){ return user; }
-    public void setUser(User user){ this.user = user; }
-    public Event getEvent(){ return event; }
-    public void setEvent(Event event){ this.event = event; }
-    public BigDecimal getDebAmount(){ return debAmount; }
-    public void setDebAmount(BigDecimal debAmount){ this.debAmount = debAmount; }
-    public BigDecimal getAmountPaid(){ return amountPaid; }
-    public void setAmountPaid(BigDecimal amountPaid){ this.amountPaid = amountPaid; }
-    public boolean isSettled(){ return settled; }
-    public void setSettled(boolean settled){ this.settled = settled; }
-    public boolean isIncluded(){ return included; }
-    public void setIncluded(boolean included){ this.included = included; }
-    public LocalDateTime getPaidAt(){ return paidAt; }
-    public void setPaidAt(LocalDateTime paidAt){ this.paidAt = paidAt; }
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Event getEvent() {
+        return event;
+    }
+
+    public void setEvent(Event event) {
+        this.event = event;
+    }
+
+    public BigDecimal getDebAmount() {
+        return debAmount;
+    }
+
+    public void setDebAmount(BigDecimal debAmount) {
+        this.debAmount = debAmount;
+    }
+
+    public BigDecimal getAmountPaid() {
+        return amountPaid;
+    }
+
+    public void setAmountPaid(BigDecimal amountPaid) {
+        this.amountPaid = amountPaid;
+    }
+
+    public boolean isSettled() {
+        return settled;
+    }
+
+    public void setSettled(boolean settled) {
+        this.settled = settled;
+    }
+
+    public boolean isIncluded() {
+        return included;
+    }
+
+    public void setIncluded(boolean included) {
+        this.included = included;
+    }
+
+    public LocalDateTime getPaidAt() {
+        return paidAt;
+    }
+
+    public void setPaidAt(LocalDateTime paidAt) {
+        this.paidAt = paidAt;
+    }
 }

@@ -1,12 +1,4 @@
 package com.example.splitwise.controllers;
-import com.example.splitwise.model.Debitor;
-import com.example.splitwise.model.Event;
-import com.example.splitwise.model.User;
-import com.example.splitwise.service.EventService;
-import com.example.splitwise.service.UserService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -15,25 +7,49 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.splitwise.model.Event;
+import com.example.splitwise.model.User;
+import com.example.splitwise.service.EventService;
+import com.example.splitwise.service.UserService;
+
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/events")
+@Tag(name = "Events", description = "Event and expense management endpoints")
+@SecurityRequirement(name = "bearerAuth")
 public class EventController {
 
     private final EventService eventService;
     private final UserService userService;
 
-    public EventController(EventService eventService, UserService userService){
+    public EventController(EventService eventService, UserService userService) {
         this.eventService = eventService;
         this.userService = userService;
     }
 
     // DTOs (simple, nested)
     public static class ParticipantDto {
+
         public Long userId;
         public boolean included = true;
         // optional custom share omitted for simplicity
     }
+
     public static class CreateEventDto {
+
         public String title;
         public Long creatorId;
         public BigDecimal total;
@@ -42,11 +58,15 @@ public class EventController {
 
     // Create event with participants (equal split among included)
     @PostMapping
-    public ResponseEntity<Event> createEvent(@RequestBody CreateEventDto dto){
+    public ResponseEntity<Event> createEvent(@RequestBody CreateEventDto dto) {
         // validate creator
         User creator = userService.getUser(dto.creatorId).orElse(null);
-        if (creator == null) return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        if (dto.total == null || dto.total.compareTo(BigDecimal.ZERO) <= 0) return ResponseEntity.badRequest().build();
+        if (creator == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+        if (dto.total == null || dto.total.compareTo(BigDecimal.ZERO) <= 0) {
+            return ResponseEntity.badRequest().build();
+        }
 
         Event e = new Event();
         e.setTitle(dto.title);
@@ -59,7 +79,9 @@ public class EventController {
                 .map(p -> userService.getUser(p.userId).orElse(null))
                 .collect(Collectors.toList());
 
-        if (includedUsers.isEmpty()) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        if (includedUsers.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
 
         // create equal splits and attach to event
         eventService.createEqualSplits(e, includedUsers);
@@ -80,12 +102,12 @@ public class EventController {
 //        }
 //    }
     @GetMapping("/{id}")
-    public ResponseEntity<?> getEvent(@PathVariable Long id){
+    public ResponseEntity<?> getEvent(@PathVariable Long id) {
         try {
             Event e = eventService.getEvent(id); // uses fetch-join in service
 
             var splits = e.getSplits().stream().map(d -> {
-                Map<String,Object> m = new HashMap<>();
+                Map<String, Object> m = new HashMap<>();
                 m.put("id", d.getId());
                 m.put("debAmount", d.getDebAmount());
                 m.put("amountPaid", d.getAmountPaid());
@@ -104,7 +126,7 @@ public class EventController {
                 return m;
             }).toList();
 
-            Map<String,Object> resp = new HashMap<>();
+            Map<String, Object> resp = new HashMap<>();
             resp.put("id", e.getId());
             resp.put("title", e.getTitle());
             resp.put("total", e.getTotal());
@@ -115,12 +137,12 @@ public class EventController {
             resp.put("splits", splits);
 
             return ResponseEntity.ok(resp);
-        } catch (IllegalArgumentException ex){
+        } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "event not found"));
         } catch (Exception ex) {
             // log for diagnosis
             ex.printStackTrace();
-            Map<String,Object> err = new HashMap<>();
+            Map<String, Object> err = new HashMap<>();
             err.put("error", "internal_error");
             err.put("message", ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(err);
@@ -167,31 +189,30 @@ public class EventController {
 //        }
 //    }
 //
-
     // List events
     @GetMapping
-    public ResponseEntity<List<Event>> getAllEvents(){
+    public ResponseEntity<List<Event>> getAllEvents() {
         return ResponseEntity.ok(eventService.getAllEvents());
     }
 
     // Delete event (hard delete)
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteEvent(@PathVariable Long id){
+    public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
         try {
             eventService.deleteEvent(id);
             return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException ex){
+        } catch (IllegalArgumentException ex) {
             return ResponseEntity.notFound().build();
         }
     }
 
     // Cancel (soft delete)
     @PostMapping("/{id}/cancel")
-    public ResponseEntity<Event> cancelEvent(@PathVariable Long id){
+    public ResponseEntity<Event> cancelEvent(@PathVariable Long id) {
         try {
             Event e = eventService.cancelEvent(id);
             return ResponseEntity.ok(e);
-        } catch (IllegalArgumentException ex){
+        } catch (IllegalArgumentException ex) {
             return ResponseEntity.notFound().build();
         }
     }
@@ -227,8 +248,6 @@ public class EventController {
         return ResponseEntity.ok(list);
     }
 
-
-
     @PutMapping("/{id}")
     public ResponseEntity<?> updateEvent(@PathVariable Long id, @RequestBody CreateEventDto payload) {
 
@@ -242,8 +261,12 @@ public class EventController {
         }
 
         // update only allowed fields
-        if (payload.title != null) existing.setTitle(payload.title);
-        if (payload.total != null) existing.setTotal(payload.total);
+        if (payload.title != null) {
+            existing.setTitle(payload.title);
+        }
+        if (payload.total != null) {
+            existing.setTotal(payload.total);
+        }
 
         // SAVE
         Event saved = eventService.save(existing);  // ← you MUST add save() in EventService if missing

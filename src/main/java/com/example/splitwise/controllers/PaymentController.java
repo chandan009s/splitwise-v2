@@ -1,29 +1,50 @@
 package com.example.splitwise.controllers;
 
-import com.example.splitwise.model.Transaction;
-import com.example.splitwise.service.PaymentService;
+import java.math.BigDecimal;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDecimal;
+import com.example.splitwise.model.Transaction;
+import com.example.splitwise.service.PaymentService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/payments")
+@Tag(name = "Payments", description = "Payment processing endpoints")
+@SecurityRequirement(name = "bearerAuth")
 public class PaymentController {
 
     private final PaymentService paymentService;
-    public PaymentController(PaymentService paymentService){ this.paymentService = paymentService; }
+
+    public PaymentController(PaymentService paymentService) {
+        this.paymentService = paymentService;
+    }
 
     public static class PayDto {
+
         public Long debitorId;
         public Long payerUserId;
         public BigDecimal amount;
     }
 
-    // Pay a split (partial or full)
+    @Operation(summary = "Make payment", description = "Make a payment towards a split (partial or full settlement)")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Payment successful"),
+        @ApiResponse(responseCode = "400", description = "Invalid payment data or debitor not found"),
+        @ApiResponse(responseCode = "500", description = "Payment failed (optimistic lock or server error)")
+    })
     @PostMapping("/pay")
-    public ResponseEntity<Transaction> pay(@RequestBody PayDto dto){
+    public ResponseEntity<Transaction> pay(@RequestBody PayDto dto) {
         if (dto.debitorId == null || dto.payerUserId == null || dto.amount == null) {
             return ResponseEntity.badRequest().build();
         }
