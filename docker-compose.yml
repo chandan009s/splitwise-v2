@@ -6,6 +6,12 @@ services:
     container_name: splitwise-db
     env_file:
       - .env
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: splitwise_v2
+    ports:
+      - "5433:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
 
@@ -16,6 +22,8 @@ services:
       - .env
     depends_on:
       - db
+    ports:
+      - "8080:8080"
 
   nginx:
     image: nginx:alpine
@@ -26,6 +34,25 @@ services:
       - ./nginx/conf/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - backend
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - backend
+  
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
 
 volumes:
   db-data:
