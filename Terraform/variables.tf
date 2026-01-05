@@ -7,8 +7,8 @@ variable "project_name" {
 }
 
 variable "ami_id" {
-  description = "Amazon Linux 2 AMI"
-  default     = "ami-0c02fb55956c7d316"
+  description = "Ubuntu Linux AMI"
+  default     = "ami-0ecb62995f68bb549"
 }
 
 variable "instance_type" {
