@@ -6,6 +6,12 @@ resource "aws_instance" "app" {
   key_name               = aws_key_pair.ssh_key.key_name
   vpc_security_group_ids = [aws_security_group.app_sg.id]
 
+  root_block_device {
+    volume_size = 25        
+    volume_type = "gp3"     
+    delete_on_termination = true
+  }
+
   tags = {
     Name = "${var.project_name}-ec2"
   }
