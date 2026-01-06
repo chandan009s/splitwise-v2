@@ -7,7 +7,7 @@ variable "project_name" {
 }
 
 variable "ami_id" {
-  description = "Ubuntu Linux AMI"
+  description = "Ubuntu Linux Ami"
   default     = "ami-0ecb62995f68bb549"
 }
 
