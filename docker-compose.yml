@@ -16,7 +16,7 @@ services:
       - db-data:/var/lib/postgresql/data
 
   backend:
-    image: chandan19s/splitwise-backend:latest
+    image: chandans19/splitwise-backend:latest
     container_name: splitwise-backend
     env_file:
       - .env
