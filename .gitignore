@@ -34,3 +34,36 @@ build/
 
 ### VS Code ###
 .vscode/
+
+*.pem
+*.key
+id_rsa
+id_rsa.pub
+
+### Terraform ###
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+### Docker ###
+**/docker-data/
+**/pgdata/
+
+### Java/Spring Boot ###
+target/
+*.log
+*.class
+
+### OS-Files ###
+.DS_Store
+Thumbs.db
+
+### Test/Coverage ###
+coverage/
+
